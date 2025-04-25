@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESP32 Robot Control</title>
+    <style>
+        body { text-align: center; font-family: Arial, sans-serif; background-color: #111; color: #fff; }
+        img { width: 80%; border-radius: 10px; margin-top: 10px; border: 3px solid #00ff00; }
+        .slider-container { margin: 10px; }
+        input[type="range"] { width: 50%; }
+        #velocityLabel { font-size: 20px; font-weight: bold; color: #0f0; }
+    </style>
+    <script>
+        let lastCommand = "";  // Store last command to prevent redundant requests
+
+        function sendCommand(command) {
+            let velocity = document.getElementById("velocity").value;
+            if (command !== lastCommand) {  // Avoid sending duplicate commands
+                fetch('/control', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `command=${command}&velocity=${velocity}`
+                });
+                lastCommand = command;
+            }
+        }
+
+        // Handle keyboard input
+        document.addEventListener("keydown", function(event) {
+            if (event.key === "w") sendCommand("f");  // Forward
+            if (event.key === "s") sendCommand("b");  // Backward
+            if (event.key === "a") sendCommand("l");  // Left
+            if (event.key === "d") sendCommand("r");  // Right
+        });
+
+        document.addEventListener("keyup", function(event) {
+            sendCommand("s");  // Stop on key release
+        });
+    </script>
+</head>
+<body>
+
+    <h1>SmartBot Live Feed</h1>
+
+    <!-- Velocity Slider -->
+    <div class="slider-container">
+        <label for="velocity">Velocity: </label>
+        <input type="range" id="velocity" min="0" max="255" value="100"
+               oninput="document.getElementById('velocityLabel').innerText = this.value">
+        <span id="velocityLabel">100</span>
+    </div>
+
+    <!-- Camera Stream -->
+    <img src="{{ camera_url }}" alt="Camera Feed">
+
+</body>
+</html>
